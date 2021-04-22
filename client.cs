@@ -1,13 +1,13 @@
 using System;
 using System.IO;
 using System.Net;
-using System.Net.Sockets;
 using System.Text;
-
+using System.Net.Sockets;
+using System.Collections.Generic;
 public class MyTcpClient {
 
     public static void Main(){
-        Connect();
+        Connect("127.0.0.1", 25250);
     }
 
     public static void InitMessage(){
@@ -15,21 +15,28 @@ public class MyTcpClient {
     }
 
     //göra två threads en för att skicka och en för att ta emot
-    public static void Connect() {
+    public static void Connect(String server, int port) {
 
         try {
-            Int32 port = 25250;
             TcpClient client = new TcpClient(server, port);
 
             NetworkStream stream = client.GetStream();
 
+
             string input_string;
             while(!string.IsNullOrEmpty((input_string = Console.ReadLine()))){
-
+                
                 byte[] buffer = System.Text.Encoding.ASCII.GetBytes(input_string);
-                stream.Write(buffer, 0, buffer.Length);
+                ushort packetLength = (ushort)buffer.Length;
 
-                Console.WriteLine("Sent: {0} \n", System.Text.Encoding.ASCII.GetString(buffer));
+                List<byte> list = new List<byte>();
+                list.AddRange(BitConverter.GetBytes(packetLength));
+                list.AddRange(buffer);
+
+                
+                stream.Write(list.ToArray(), 0, list.Count);
+
+                Console.WriteLine("Sent: {0} \n", string.Join(", ", list));
 
             }
 
