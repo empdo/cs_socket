@@ -24,9 +24,9 @@ public class MyTcpListener
         server.Start();
 
         int count = 1;
+        Console.WriteLine("Waiting for a connection... ");
         while (true)
         {
-            Console.WriteLine("Waiting for a connection... ");
 
             TcpClient connection = server.AcceptTcpClient();
 
@@ -44,7 +44,7 @@ public class MyTcpListener
 
         PlayerConnection player;
         lock (_lock) player = client_list[(int)o];
-        Console.WriteLine("Coneected!");
+        Console.WriteLine("Conection astablished from: {0}", player.client.Client.RemoteEndPoint);
 
 
 		//client appendar en short i början av packetet och den här grejen läser av 2 bytes vilket är shorten, t.ex 3 0.
@@ -60,7 +60,6 @@ public class MyTcpListener
 
             int countRead = stream.Read(packageType, 0, packageType.Length);
             ushort package_type = BitConverter.ToUInt16(packageType);
-            Console.WriteLine("package type: {0}", package_type);
 
             countRead = stream.Read(byteLength, 0, byteLength.Length);
             if (countRead < byteLength.Length)
@@ -69,6 +68,9 @@ public class MyTcpListener
             }
 
             ushort bytesToRead = BitConverter.ToUInt16(byteLength);
+
+            Console.WriteLine("package from: {0}", player.client.Client.RemoteEndPoint);
+            Console.WriteLine("package type: {0}", package_type);
             Console.WriteLine("package length: {0}", bytesToRead);
 
             int i;
@@ -76,7 +78,7 @@ public class MyTcpListener
             {
                 bytesToRead -= (ushort)i;
                 data += System.Text.Encoding.ASCII.GetString(bytes, 0, i);
-                Console.WriteLine("received: {0}", data);
+                Console.WriteLine("package data: {0} \n", data);
             }
 
         }
