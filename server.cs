@@ -39,7 +39,6 @@ public class MyTcpListener
         }
 
     }
-
     public static void client_thread(object o)
     {
 
@@ -47,42 +46,43 @@ public class MyTcpListener
         lock (_lock) player = client_list[(int)o];
         Console.WriteLine("Coneected!");
 
-        Byte[] bytes = new Byte[1024];
-        String data = "";
 
-        NetworkStream stream = player.client.GetStream();
-
-		//client appendar en short i början av packetet och den här grejen läser av 2 bytes vilket är shorten
+		//client appendar en short i början av packetet och den här grejen läser av 2 bytes vilket är shorten, t.ex 3 0.
+        // Layout: (short) package type, (short) package length, (byte[]) package content.
         Byte[] byteLength = new Byte[2];
-        int countRead = stream.Read(byteLength, 0, byteLength.Length);
-        if (countRead < byteLength.Length)
-        {
-            throw new InvalidOperationException("packet to short");
+        Byte[] packageType = new Byte[2]; //gör om skit namn
+        while(true) {
+
+            Byte[] bytes = new Byte[1024];
+            String data = "";
+
+            NetworkStream stream = player.client.GetStream();
+
+            int countRead = stream.Read(packageType, 0, packageType.Length);
+            ushort package_type = BitConverter.ToUInt16(packageType);
+            Console.WriteLine("package type: {0}", package_type);
+
+            countRead = stream.Read(byteLength, 0, byteLength.Length);
+            if (countRead < byteLength.Length)
+            {
+                throw new InvalidOperationException("packet to short");
+            }
+
+            ushort bytesToRead = BitConverter.ToUInt16(byteLength);
+            Console.WriteLine("package length: {0}", bytesToRead);
+
+            int i;
+            while ((i = stream.Read(bytes, 0, Math.Min(bytesToRead, bytes.Length))) != 0)
+            {
+                bytesToRead -= (ushort)i;
+                data += System.Text.Encoding.ASCII.GetString(bytes, 0, i);
+                Console.WriteLine("received: {0}", data);
+            }
+
         }
-
-        ushort bytesToRead = BitConverter.ToUInt16(byteLength);
-
-        int i;
-        while ((i = stream.Read(bytes, 0, Math.Min(bytesToRead, bytes.Length))) != 0)
-        {
-            bytesToRead -= (ushort)i;
-            data += System.Text.Encoding.ASCII.GetString(bytes, 0, i);
-			Console.WriteLine("asd");
-        }
-        Console.WriteLine("received: {0}", data);
-        data = data.ToUpper();
-
-        byte[] msg = System.Text.Encoding.ASCII.GetBytes(data);
-
-        //stream.Write(msg, 0, msg.Length);
-        Console.WriteLine("Sent: {0}", data);
-
-        //on read someting
-        //player.packet_queue.add)(("blalbblala))
-
+        Console.WriteLine("Shutting down connection to {0}", player.client.Client.RemoteEndPoint);
         lock (_lock) client_list.Remove((int)o);
         player.client.Client.Shutdown(SocketShutdown.Both);
         player.client.Close();
-
     }
 }

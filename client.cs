@@ -24,16 +24,22 @@ public class MyTcpClient {
 
 
             string input_string;
+            Console.Write("Enter message: ");
             while(!string.IsNullOrEmpty((input_string = Console.ReadLine()))){
+
+                Console.Write("Enter package type: ");
+                ushort package_type = ushort.Parse(Console.ReadLine()); 
                 
                 byte[] buffer = System.Text.Encoding.ASCII.GetBytes(input_string);
                 ushort packetLength = (ushort)buffer.Length;
 
                 List<byte> list = new List<byte>();
+                list.AddRange(BitConverter.GetBytes(package_type));
                 list.AddRange(BitConverter.GetBytes(packetLength));
                 list.AddRange(buffer);
 
-                
+
+
                 stream.Write(list.ToArray(), 0, list.Count);
 
                 Console.WriteLine("Sent: {0} \n", string.Join(", ", list));
@@ -48,7 +54,6 @@ public class MyTcpClient {
             //Int32 bytes = stream.Read(data, 0, data.Length);
             //responsData = System.Text.Encoding.ASCII.GetString(data, 0, bytes);
             //Console.WriteLine("Recived: {0}", responsData);
-
             client.Client.Shutdown(SocketShutdown.Send);
             stream.Close();
             client.Close();
