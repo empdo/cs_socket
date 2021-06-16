@@ -21,14 +21,12 @@ namespace GameServer {
             while(packetQueue.Count > 0) {
                 foreach(Dictionary<int, string> dict in packetQueue) {
                     foreach(var message in dict){
-                        if(message.GetType() == String.GetType()){
 
-                            byte[] buffer = System.Text.Encoding.ASCII.GetBytes(message);
+                            byte[] buffer = System.Text.Encoding.ASCII.GetBytes(message.ToString());
                             List<byte> list = new List<byte>();
                             list.AddRange(buffer);
                             stream.Write(list.ToArray(), 0, list.Count);    
 
-                        }
                     }
                 }
 
