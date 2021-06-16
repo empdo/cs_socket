@@ -9,13 +9,32 @@ using System.Text;
 namespace GameServer {
     public class PlayerConnection {
 
-        public Queue<String> packetQueue = new Queue<String>();
+        public Queue<Dictionary<int, string>> packetQueue = new Queue<Dictionary<int, string>>();
         public TcpClient client;
 
         public readonly object packetQueueLock = new object();
         public PlayerConnection(TcpClient client){
-        this.client = client; 
+            this.client = client; 
         }
+
+        public void writeQueue(Stream stream){
+            while(packetQueue.Count > 0) {
+                foreach(Dictionary<int, string> dict in packetQueue) {
+                    foreach(var message in dict){
+                        if(message.GetType() == String.GetType()){
+
+                            byte[] buffer = System.Text.Encoding.ASCII.GetBytes(message);
+                            List<byte> list = new List<byte>();
+                            list.AddRange(buffer);
+                            stream.Write(list.ToArray(), 0, list.Count);    
+
+                        }
+                    }
+                }
+
+            }
+        }
+
     }
 
 }
